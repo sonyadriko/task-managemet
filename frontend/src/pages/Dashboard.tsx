@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import apiClient from '../api/client';
+import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
 interface Team {
@@ -21,8 +22,7 @@ interface Issue {
 }
 
 const Dashboard: React.FC = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    const { user } = useAuth();
     const [teams, setTeams] = useState<Team[]>([]);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,11 +46,6 @@ const Dashboard: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
-
     const getPriorityClass = (priority: string) => {
         switch (priority) {
             case 'URGENT': return 'badge-danger';
@@ -62,62 +57,24 @@ const Dashboard: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="loading-screen">
-                <div className="spinner-lg"></div>
-                <p>Loading your workspace...</p>
+            <div className="page-layout">
+                <Sidebar activeItem="dashboard" />
+                <main className="main-content">
+                    <div className="loading-screen">
+                        <div className="spinner-lg"></div>
+                        <p>Loading your workspace...</p>
+                    </div>
+                </main>
             </div>
         );
     }
 
     return (
-        <div className="dashboard">
-            {/* Sidebar */}
-            <aside className="sidebar">
-                <div className="sidebar-header">
-                    <div className="sidebar-logo">
-                        <span>📋</span>
-                    </div>
-                    <h2>Task Manager</h2>
-                </div>
-
-                <nav className="sidebar-nav">
-                    <a href="#" className="nav-item active">
-                        <span className="nav-icon">🏠</span>
-                        Dashboard
-                    </a>
-                    <a href="#" className="nav-item">
-                        <span className="nav-icon">📊</span>
-                        Board
-                    </a>
-                    <a href="#" className="nav-item">
-                        <span className="nav-icon">📅</span>
-                        Calendar
-                    </a>
-                    <a href="#" className="nav-item">
-                        <span className="nav-icon">👥</span>
-                        Teams
-                    </a>
-                    <a href="#" className="nav-item">
-                        <span className="nav-icon">⚙️</span>
-                        Settings
-                    </a>
-                </nav>
-
-                <div className="sidebar-teams">
-                    <h3>Your Teams</h3>
-                    {teams.map(team => (
-                        <div key={team.id} className="team-item">
-                            <span className="team-avatar">{team.name.charAt(0)}</span>
-                            <span className="team-name">{team.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </aside>
-
-            {/* Main Content */}
+        <div className="page-layout">
+            <Sidebar activeItem="dashboard" />
             <main className="main-content">
                 {/* Header */}
-                <header className="dashboard-header">
+                <header className="page-header">
                     <div className="header-left">
                         <h1>Dashboard</h1>
                         <p>Welcome back, {user?.full_name}! 👋</p>
@@ -131,9 +88,6 @@ const Dashboard: React.FC = () => {
                                 <span className="user-name">{user?.full_name}</span>
                                 <span className="user-email">{user?.email}</span>
                             </div>
-                            <button onClick={handleLogout} className="btn btn-danger">
-                                Logout
-                            </button>
                         </div>
                     </div>
                 </header>
@@ -174,9 +128,9 @@ const Dashboard: React.FC = () => {
                 <section className="dashboard-section animate-fadeIn">
                     <div className="section-header">
                         <h2>Recent Tasks</h2>
-                        <button className="btn btn-primary">
+                        <Link to="/board" className="btn btn-primary">
                             + New Task
-                        </button>
+                        </Link>
                     </div>
 
                     <div className="tasks-list">
@@ -197,7 +151,7 @@ const Dashboard: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <button className="btn btn-secondary">View</button>
+                                    <Link to="/board" className="btn btn-secondary">View</Link>
                                 </div>
                             ))
                         ) : (
@@ -205,6 +159,9 @@ const Dashboard: React.FC = () => {
                                 <span className="empty-icon">📭</span>
                                 <h3>No tasks yet</h3>
                                 <p>Create your first task to get started</p>
+                                <Link to="/board" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+                                    Go to Board
+                                </Link>
                             </div>
                         )}
                     </div>
