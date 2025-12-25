@@ -98,7 +98,8 @@ func (h *TeamHandler) AddMember(c *gin.Context) {
 	teamID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 
 	var req struct {
-		UserID uint            `json:"user_id" binding:"required"`
+		Email  string          `json:"email"`
+		UserID uint            `json:"user_id"`
 		Role   models.TeamRole `json:"role" binding:"required"`
 	}
 
@@ -107,7 +108,23 @@ func (h *TeamHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	if err := h.teamService.AddMember(uint(teamID), req.UserID, req.Role); err != nil {
+	// If email provided, use that. Otherwise use user_id
+	userID := req.UserID
+	if req.Email != "" {
+		user, err := h.teamService.FindUserByEmail(req.Email)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + req.Email})
+			return
+		}
+		userID = user.ID
+	}
+
+	if userID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Either email or user_id is required"})
+		return
+	}
+
+	if err := h.teamService.AddMember(uint(teamID), userID, req.Role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

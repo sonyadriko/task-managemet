@@ -65,3 +65,7 @@ func (s *TeamService) GetMembers(teamID uint) ([]models.TeamMember, error) {
 func (s *TeamService) GetMemberRole(teamID, userID uint) (*models.TeamMember, error) {
 	return s.teamRepo.GetMemberRole(teamID, userID)
 }
+
+func (s *TeamService) FindUserByEmail(email string) (*models.User, error) {
+	return s.userRepo.FindByEmail(email)
+}
