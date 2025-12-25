@@ -22,6 +22,10 @@ func (r *IssueRepository) FindByID(id uint) (*models.Issue, error) {
 	var issue models.Issue
 	err := r.db.Preload("Status").Preload("Creator").Preload("Team").
 		Preload("Assignments.User").Preload("Assignments.AssignedByUser").
+		Preload("HoldReasons", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC")
+		}).
+		Preload("HoldReasons.CreatedByUser").
 		Where("id = ? AND deleted_at IS NULL", id).First(&issue).Error
 	if err != nil {
 		return nil, err

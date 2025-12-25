@@ -194,3 +194,194 @@
     color: var(--color-text-primary);
     font-size: 0.9rem;
 }
+
+/* Task Card - On Hold State */
+.task-card.on-hold {
+    border-color: var(--color-warning);
+    background: rgba(245, 158, 11, 0.05);
+    opacity: 0.8;
+}
+
+.hold-badge {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--color-warning);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-sm);
+    display: inline-block;
+}
+
+/* Task Actions */
+.task-actions {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.status-select {
+    flex: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: 0.8rem;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: var(--color-bg-secondary);
+}
+
+.btn-action.hold:hover {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+.btn-action.resume:hover {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+/* Modal Variants */
+.modal-lg {
+    max-width: 600px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.btn-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-tertiary);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--color-danger);
+}
+
+.modal-subtitle {
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Detail Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.detail-item label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.detail-section h3 {
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-secondary);
+}
+
+/* Hold History */
+.hold-history {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.hold-item {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.hold-item.active {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--color-warning);
+}
+
+.hold-item.resolved {
+    background: var(--color-bg-tertiary);
+}
+
+.hold-reason strong {
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+.hold-reason p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.hold-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--spacing-sm);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* Button Variants */
+.btn-warning {
+    background: var(--color-warning);
+    color: #000;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-success {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+}
