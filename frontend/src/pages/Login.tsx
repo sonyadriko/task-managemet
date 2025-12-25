@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import './Login.css';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -20,65 +21,84 @@ const Login: React.FC = () => {
             await login(email, password);
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Login failed. Please try again.');
+            setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '100px auto', padding: '20px' }}>
-            <h1>Login</h1>
-            <form onSubmit={handleSubmit}>
-                {error && (
-                    <div style={{ color: 'red', marginBottom: '10px', padding: '10px', border: '1px solid red', borderRadius: '4px' }}>
-                        {error}
+        <div className="login-page">
+            <div className="login-container animate-fadeIn">
+                {/* Logo & Branding */}
+                <div className="login-header">
+                    <div className="login-logo">
+                        <span className="logo-icon">📋</span>
                     </div>
-                )}
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px', fontSize: '14px' }}
-                    />
+                    <h1>Task Manager</h1>
+                    <p>Manage your team's tasks with ease</p>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px', fontSize: '14px' }}
-                    />
+                {/* Login Form */}
+                <form onSubmit={handleSubmit} className="login-form">
+                    {error && (
+                        <div className="alert alert-error">
+                            <span>⚠️</span>
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label className="form-label">Email Address</label>
+                        <input
+                            type="email"
+                            className="form-input"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Password</label>
+                        <input
+                            type="password"
+                            className="form-input"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary btn-lg btn-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <span className="spinner"></span>
+                                Signing in...
+                            </>
+                        ) : (
+                            'Sign In'
+                        )}
+                    </button>
+                </form>
+
+                {/* Demo Credentials */}
+                <div className="login-demo">
+                    <p>Demo Credentials</p>
+                    <code>admin@demo.com / password123</code>
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        fontSize: '16px',
-                    }}
-                >
-                    {isLoading ? 'Logging in...' : 'Login'}
-                </button>
-            </form>
-
-            <p style={{ marginTop: '20px', textAlign: 'center' }}>
-                Demo credentials: admin@demo.com / password123
-            </p>
+                {/* Footer */}
+                <div className="login-footer">
+                    <p>Task Management System v1.0</p>
+                </div>
+            </div>
         </div>
     );
 };
