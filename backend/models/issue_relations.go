@@ -67,7 +67,7 @@ type IssueActivity struct {
 	UserID       *uint        `json:"user_id,omitempty"`
 	ActivityType ActivityType `gorm:"type:activity_type;not null" json:"activity_type"`
 	Description  string       `gorm:"type:text" json:"description"`
-	Metadata     string       `gorm:"type:jsonb" json:"metadata,omitempty"`
+	Metadata     *string      `gorm:"type:jsonb;default:'{}'" json:"metadata,omitempty"`
 	CreatedAt    time.Time    `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 
 	// Relationships

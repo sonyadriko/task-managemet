@@ -47,7 +47,7 @@ func (r *IssueRepository) Delete(id uint) error {
 }
 
 func (r *IssueRepository) CreateActivity(activity *models.IssueActivity) error {
-	return r.db.Create(activity).Error
+	return r.db.Omit("Metadata").Create(activity).Error
 }
 
 func (r *IssueRepository) GetActivities(issueID uint) ([]models.IssueActivity, error) {
