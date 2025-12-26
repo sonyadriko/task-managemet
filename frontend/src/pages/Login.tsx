@@ -35,7 +35,7 @@ const Login: React.FC = () => {
                     <div className="login-logo">
                         <span className="logo-icon">🌊</span>
                     </div>
-                    <h1>FLOW</h1>
+                    <h1>Flow</h1>
                     <p>Streamline your team's workflow</p>
                 </div>
 
@@ -96,7 +96,7 @@ const Login: React.FC = () => {
 
                 {/* Footer */}
                 <div className="login-footer">
-                    <p>FLOW v1.0</p>
+                    <p>Flow v1.0</p>
                 </div>
             </div>
         </div>
