@@ -4,6 +4,8 @@ import (
 	"errors"
 	"task-management/models"
 	"task-management/repositories"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type TeamService struct {
@@ -68,4 +70,26 @@ func (s *TeamService) GetMemberRole(teamID, userID uint) (*models.TeamMember, er
 
 func (s *TeamService) FindUserByEmail(email string) (*models.User, error) {
 	return s.userRepo.FindByEmail(email)
+}
+
+func (s *TeamService) CreateUser(email, fullName string, orgID uint) (*models.User, error) {
+	// Hash password with bcrypt
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &models.User{
+		OrganizationID: orgID,
+		Email:          email,
+		PasswordHash:   string(hashedPassword),
+		FullName:       fullName,
+		Timezone:       "Asia/Jakarta",
+	}
+
+	if err := s.userRepo.Create(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

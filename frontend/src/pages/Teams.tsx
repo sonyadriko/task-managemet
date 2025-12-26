@@ -30,9 +30,10 @@ const Teams: React.FC = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [newTeam, setNewTeam] = useState({ name: '', description: '' });
-    const [newMember, setNewMember] = useState({ email: '', role: 'member' });
+    const [newMember, setNewMember] = useState({ email: '', fullName: '', role: 'member' });
     const [addMemberError, setAddMemberError] = useState('');
     const [addMemberSuccess, setAddMemberSuccess] = useState('');
+    const [isNewUser, setIsNewUser] = useState(false);
 
     useEffect(() => {
         fetchTeams();
@@ -83,25 +84,46 @@ const Teams: React.FC = () => {
         setAddMemberSuccess('');
 
         try {
-            await apiClient.post(`/teams/${selectedTeam.id}/members`, {
+            const payload: any = {
                 email: newMember.email,
                 role: newMember.role
-            });
+            };
+
+            // Include full_name if creating new user
+            if (isNewUser && newMember.fullName) {
+                payload.full_name = newMember.fullName;
+            }
+
+            const response = await apiClient.post(`/teams/${selectedTeam.id}/members`, payload);
 
             // Refresh members
             const res = await apiClient.get(`/teams/${selectedTeam.id}/members`);
             setMembers(res.data || []);
 
-            setAddMemberSuccess(`Successfully added ${newMember.email} to the team!`);
-            setNewMember({ email: '', role: 'member' });
+            // Show success message with password if new user
+            if (response.data.default_password) {
+                setAddMemberSuccess(`User created and added! Default password: ${response.data.default_password}`);
+            } else {
+                setAddMemberSuccess(`Successfully added ${newMember.email} to the team!`);
+            }
 
-            // Auto close after success
+            setNewMember({ email: '', fullName: '', role: 'member' });
+            setIsNewUser(false);
+
+            // Auto close after success (longer for new users to see password)
             setTimeout(() => {
                 setShowAddMemberModal(false);
                 setAddMemberSuccess('');
-            }, 1500);
+            }, response.data.default_password ? 3000 : 1500);
         } catch (error: any) {
-            setAddMemberError(error.response?.data?.error || 'Failed to add member. Make sure the email exists.');
+            const errorData = error.response?.data;
+            if (errorData?.new_user) {
+                // User doesn't exist, show full name field
+                setIsNewUser(true);
+                setAddMemberError('User not found. Enter full name to create new user.');
+            } else {
+                setAddMemberError(errorData?.error || 'Failed to add member.');
+            }
         }
     };
 
@@ -281,14 +303,19 @@ const Teams: React.FC = () => {
 
                 {/* Add Member Modal */}
                 {showAddMemberModal && (
-                    <div className="modal-overlay" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); }}>
+                    <div className="modal-overlay" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); }}>
                         <div className="modal" onClick={e => e.stopPropagation()}>
-                            <h2>Add Team Member</h2>
-                            <p className="modal-subtitle">Add a user to {selectedTeam?.name}</p>
+                            <h2>{isNewUser ? '👤 Create & Add User' : 'Add Team Member'}</h2>
+                            <p className="modal-subtitle">
+                                {isNewUser
+                                    ? 'This email is not registered. Fill in the details to create a new user.'
+                                    : `Add a user to ${selectedTeam?.name}`
+                                }
+                            </p>
 
                             {addMemberError && (
-                                <div className="alert alert-error">
-                                    <span>⚠️</span> {addMemberError}
+                                <div className={`alert ${isNewUser ? 'alert-warning' : 'alert-error'}`}>
+                                    <span>{isNewUser ? '💡' : '⚠️'}</span> {addMemberError}
                                 </div>
                             )}
 
@@ -308,9 +335,29 @@ const Teams: React.FC = () => {
                                         value={newMember.email}
                                         onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
                                         required
+                                        disabled={isNewUser}
                                     />
-                                    <small className="form-hint">The user must already be registered in the system</small>
+                                    {!isNewUser && (
+                                        <small className="form-hint">Enter email of existing user, or enter new email to invite</small>
+                                    )}
                                 </div>
+
+                                {isNewUser && (
+                                    <div className="form-group">
+                                        <label className="form-label">Full Name *</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Enter full name"
+                                            value={newMember.fullName}
+                                            onChange={(e) => setNewMember({ ...newMember, fullName: e.target.value })}
+                                            required
+                                            autoFocus
+                                        />
+                                        <small className="form-hint">New user will be created with default password: password123</small>
+                                    </div>
+                                )}
+
                                 <div className="form-group">
                                     <label className="form-label">Role</label>
                                     <select
@@ -325,11 +372,16 @@ const Teams: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="modal-actions">
-                                    <button type="button" className="btn btn-secondary" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); setNewMember({ email: '', fullName: '', role: 'member' }); }}>
                                         Cancel
                                     </button>
+                                    {isNewUser && (
+                                        <button type="button" className="btn btn-secondary" onClick={() => { setIsNewUser(false); setAddMemberError(''); setNewMember({ ...newMember, fullName: '' }); }}>
+                                            Try Different Email
+                                        </button>
+                                    )}
                                     <button type="submit" className="btn btn-primary">
-                                        Add Member
+                                        {isNewUser ? 'Create & Add User' : 'Add Member'}
                                     </button>
                                 </div>
                             </form>

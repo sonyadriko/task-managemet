@@ -98,9 +98,9 @@ func (h *TeamHandler) AddMember(c *gin.Context) {
 	teamID, _ := strconv.ParseUint(c.Param("id"), 10, 32)
 
 	var req struct {
-		Email  string          `json:"email"`
-		UserID uint            `json:"user_id"`
-		Role   models.TeamRole `json:"role" binding:"required"`
+		Email    string          `json:"email" binding:"required"`
+		FullName string          `json:"full_name"`
+		Role     models.TeamRole `json:"role" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -108,28 +108,45 @@ func (h *TeamHandler) AddMember(c *gin.Context) {
 		return
 	}
 
-	// If email provided, use that. Otherwise use user_id
-	userID := req.UserID
-	if req.Email != "" {
-		user, err := h.teamService.FindUserByEmail(req.Email)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "User not found with email: " + req.Email})
+	// Try to find existing user
+	user, err := h.teamService.FindUserByEmail(req.Email)
+	if err != nil {
+		// User doesn't exist - create new user if fullName provided
+		if req.FullName == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":    "User not found. Provide full_name to create new user.",
+				"new_user": true,
+			})
 			return
 		}
-		userID = user.ID
+
+		// Get organization ID from the team
+		team, err := h.teamService.GetByID(uint(teamID))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Team not found"})
+			return
+		}
+
+		// Create new user with default password
+		newUser, err := h.teamService.CreateUser(req.Email, req.FullName, team.OrganizationID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user: " + err.Error()})
+			return
+		}
+		user = newUser
 	}
 
-	if userID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Either email or user_id is required"})
-		return
-	}
-
-	if err := h.teamService.AddMember(uint(teamID), userID, req.Role); err != nil {
+	// Add user to team
+	if err := h.teamService.AddMember(uint(teamID), user.ID, req.Role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Member added"})
+	c.JSON(http.StatusCreated, gin.H{
+		"message":          "Member added successfully",
+		"user_id":          user.ID,
+		"default_password": "password123",
+	})
 }
 
 func (h *TeamHandler) RemoveMember(c *gin.Context) {
