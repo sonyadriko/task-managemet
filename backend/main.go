@@ -21,7 +21,7 @@ func main() {
 
 	// Initialize database connection
 	db := config.InitDB()
-	
+
 	// Auto-migrate models (optional, for development)
 	// config.AutoMigrate(db)
 
@@ -95,7 +95,7 @@ func main() {
 		// Issue Statuses
 		statuses := api.Group("/statuses")
 		{
-			statuses.GET("/team/:teamId", statusHandler.GetByTeam)
+			statuses.GET("", statusHandler.GetByOrganization)
 			statuses.POST("", statusHandler.Create)
 			statuses.PUT("/:id", statusHandler.Update)
 			statuses.DELETE("/:id", statusHandler.Delete)

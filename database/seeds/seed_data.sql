@@ -29,8 +29,8 @@ INSERT INTO team_members (team_id, user_id, role) VALUES
 (2, 3, 'member'),       -- Developer 1 in Frontend
 (2, 4, 'member');       -- Developer 2 in Frontend
 
--- Insert workflow statuses for Engineering team
-INSERT INTO issue_statuses (team_id, name, position, is_final, color) VALUES 
+-- Insert workflow statuses for Organization (shared by all teams)
+INSERT INTO issue_statuses (organization_id, name, position, is_final, color) VALUES 
 (1, 'WAITING', 1, false, '#9CA3AF'),
 (1, 'IN_PROGRESS', 2, false, '#3B82F6'),
 (1, 'QA', 3, false, '#F59E0B'),
@@ -38,20 +38,13 @@ INSERT INTO issue_statuses (team_id, name, position, is_final, color) VALUES
 (1, 'DONE', 5, true, '#10B981'),
 (1, 'HOLD', 6, false, '#EF4444');
 
--- Insert workflow statuses for Frontend Team
-INSERT INTO issue_statuses (team_id, name, position, is_final, color) VALUES 
-(2, 'BACKLOG', 1, false, '#9CA3AF'),
-(2, 'IN_PROGRESS', 2, false, '#3B82F6'),
-(2, 'REVIEW', 3, false, '#F59E0B'),
-(2, 'DONE', 4, true, '#10B981');
-
 -- Insert demo issues
 INSERT INTO issues (team_id, status_id, title, description, priority, created_by) VALUES 
 (1, 1, 'Setup CI/CD Pipeline', 'Configure automated deployment pipeline', 'HIGH', 1),
 (1, 2, 'Implement Authentication', 'Add JWT-based authentication system', 'URGENT', 1),
 (1, 3, 'Fix Database Performance', 'Optimize slow queries in reports', 'NORMAL', 2),
-(2, 7, 'Design Landing Page', 'Create modern landing page design', 'HIGH', 2),
-(2, 8, 'Build Dashboard UI', 'Implement main dashboard interface', 'NORMAL', 2);
+(2, 1, 'Design Landing Page', 'Create modern landing page design', 'HIGH', 2),
+(2, 2, 'Build Dashboard UI', 'Implement main dashboard interface', 'NORMAL', 2);
 
 -- Insert assignments
 INSERT INTO issue_assignments (issue_id, user_id, start_date, end_date, assigned_by, is_active) VALUES 

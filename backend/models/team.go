@@ -17,12 +17,11 @@ type Team struct {
 	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 
 	// Relationships
-	Organization Organization  `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
-	ParentTeam   *Team         `gorm:"foreignKey:ParentTeamID" json:"parent_team,omitempty"`
-	SubTeams     []Team        `gorm:"foreignKey:ParentTeamID" json:"sub_teams,omitempty"`
-	Members      []TeamMember  `gorm:"foreignKey:TeamID" json:"members,omitempty"`
-	Issues       []Issue       `gorm:"foreignKey:TeamID" json:"issues,omitempty"`
-	Statuses     []IssueStatus `gorm:"foreignKey:TeamID" json:"statuses,omitempty"`
+	Organization Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
+	ParentTeam   *Team        `gorm:"foreignKey:ParentTeamID" json:"parent_team,omitempty"`
+	SubTeams     []Team       `gorm:"foreignKey:ParentTeamID" json:"sub_teams,omitempty"`
+	Members      []TeamMember `gorm:"foreignKey:TeamID" json:"members,omitempty"`
+	Issues       []Issue      `gorm:"foreignKey:TeamID" json:"issues,omitempty"`
 }
 
 type TeamRole string

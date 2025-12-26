@@ -72,7 +72,7 @@ const Board: React.FC = () => {
             setLoading(true);
             try {
                 const [statusRes, issuesRes] = await Promise.all([
-                    apiClient.get(`/statuses/team/${selectedTeam}`),
+                    apiClient.get(`/statuses`),
                     apiClient.get(`/issues?team_id=${selectedTeam}`)
                 ]);
                 setStatuses((statusRes.data || []).sort((a: Status, b: Status) => a.position - b.position));

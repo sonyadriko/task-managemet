@@ -27,9 +27,9 @@ func (r *StatusRepository) FindByID(id uint) (*models.IssueStatus, error) {
 	return &status, nil
 }
 
-func (r *StatusRepository) FindByTeam(teamID uint) ([]models.IssueStatus, error) {
+func (r *StatusRepository) FindByOrganization(orgID uint) ([]models.IssueStatus, error) {
 	var statuses []models.IssueStatus
-	err := r.db.Where("team_id = ?", teamID).Order("position ASC").Find(&statuses).Error
+	err := r.db.Where("organization_id = ?", orgID).Order("position ASC").Find(&statuses).Error
 	return statuses, err
 }
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"task-management/middleware"
 	"task-management/models"
 	"task-management/repositories"
 	"task-management/services"
@@ -22,9 +23,9 @@ func NewStatusHandler(statusRepo *repositories.StatusRepository, permissionServi
 	}
 }
 
-func (h *StatusHandler) GetByTeam(c *gin.Context) {
-	teamID, _ := strconv.ParseUint(c.Param("teamId"), 10, 32)
-	statuses, err := h.statusRepo.FindByTeam(uint(teamID))
+func (h *StatusHandler) GetByOrganization(c *gin.Context) {
+	orgID := middleware.GetOrganizationID(c)
+	statuses, err := h.statusRepo.FindByOrganization(orgID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -38,15 +38,15 @@ type Issue struct {
 }
 
 type IssueStatus struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	TeamID    uint      `gorm:"not null" json:"team_id"`
-	Name      string    `gorm:"size:100;not null" json:"name"`
-	Position  int       `gorm:"not null" json:"position"`
-	IsFinal   bool      `gorm:"default:false" json:"is_final"`
-	Color     string    `gorm:"size:7;default:#6B7280" json:"color"`
-	CreatedAt time.Time `json:"created_at"`
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	OrganizationID uint      `gorm:"not null" json:"organization_id"`
+	Name           string    `gorm:"size:100;not null" json:"name"`
+	Position       int       `gorm:"not null" json:"position"`
+	IsFinal        bool      `gorm:"default:false" json:"is_final"`
+	Color          string    `gorm:"size:7;default:#6B7280" json:"color"`
+	CreatedAt      time.Time `json:"created_at"`
 
 	// Relationships
-	Team   Team    `gorm:"foreignKey:TeamID" json:"team,omitempty"`
-	Issues []Issue `gorm:"foreignKey:StatusID" json:"issues,omitempty"`
+	Organization Organization `gorm:"foreignKey:OrganizationID" json:"organization,omitempty"`
+	Issues       []Issue      `gorm:"foreignKey:StatusID" json:"issues,omitempty"`
 }
