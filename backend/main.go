@@ -68,6 +68,9 @@ func main() {
 	// Protected routes
 	api := router.Group("/api")
 	api.Use(middleware.AuthMiddleware())
+
+	// Change password (needs auth)
+	api.POST("/auth/change-password", authHandler.ChangePassword)
 	{
 		// Organizations
 		orgs := api.Group("/organizations")

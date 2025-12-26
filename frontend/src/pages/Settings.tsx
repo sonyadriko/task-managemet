@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
 import './Settings.css';
 
 const Settings: React.FC = () => {
     const { user } = useAuth();
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        // Validate
+        if (passwordForm.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters');
+            return;
+        }
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError('New passwords do not match');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await apiClient.post('/auth/change-password', {
+                current_password: passwordForm.currentPassword,
+                new_password: passwordForm.newPassword
+            });
+            setPasswordSuccess('Password changed successfully!');
+            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (error: any) {
+            setPasswordError(error.response?.data?.error || 'Failed to change password');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="page-layout">
@@ -43,9 +83,6 @@ const Settings: React.FC = () => {
                                 <label className="form-label">Timezone</label>
                                 <input type="text" className="form-input" value={user?.timezone || ''} readOnly />
                             </div>
-                            <button className="btn btn-secondary" disabled>
-                                Update Profile (Coming Soon)
-                            </button>
                         </div>
                     </section>
 
@@ -68,21 +105,55 @@ const Settings: React.FC = () => {
                     <section className="settings-section">
                         <h2>🔒 Security</h2>
                         <div className="settings-card">
-                            <div className="form-group">
-                                <label className="form-label">Current Password</label>
-                                <input type="password" className="form-input" placeholder="••••••••" disabled />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">New Password</label>
-                                <input type="password" className="form-input" placeholder="••••••••" disabled />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Confirm New Password</label>
-                                <input type="password" className="form-input" placeholder="••••••••" disabled />
-                            </div>
-                            <button className="btn btn-secondary" disabled>
-                                Change Password (Coming Soon)
-                            </button>
+                            {passwordError && (
+                                <div className="alert alert-error">
+                                    <span>⚠️</span> {passwordError}
+                                </div>
+                            )}
+                            {passwordSuccess && (
+                                <div className="alert alert-success">
+                                    <span>✅</span> {passwordSuccess}
+                                </div>
+                            )}
+                            <form onSubmit={handlePasswordChange}>
+                                <div className="form-group">
+                                    <label className="form-label">Current Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        placeholder="Enter current password"
+                                        value={passwordForm.currentPassword}
+                                        onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">New Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        placeholder="Enter new password (min 6 chars)"
+                                        value={passwordForm.newPassword}
+                                        onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                        required
+                                        minLength={6}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Confirm New Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        placeholder="Confirm new password"
+                                        value={passwordForm.confirmPassword}
+                                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <button type="submit" className="btn btn-primary" disabled={loading}>
+                                    {loading ? 'Changing...' : 'Change Password'}
+                                </button>
+                            </form>
                         </div>
                     </section>
 
