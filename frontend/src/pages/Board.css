@@ -60,6 +60,21 @@
     box-shadow: var(--shadow-md);
 }
 
+/* Drag and Drop Styles */
+.task-card.dragging {
+    opacity: 0.9;
+    transform: rotate(3deg);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+    background: var(--color-bg-card);
+}
+
+.column-content.dragging-over {
+    background: rgba(72, 119, 186, 0.1);
+    border: 2px dashed var(--color-primary);
+    border-radius: var(--radius-md);
+}
+
 .task-priority {
     display: inline-block;
     padding: 2px 8px;

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 import './Board.css';
 
 interface HoldReason {
@@ -217,6 +219,20 @@ const Board: React.FC = () => {
         setShowHoldModal(true);
     };
 
+    const handleDeleteIssue = async (issueId: number) => {
+        if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) return;
+
+        try {
+            await apiClient.delete(`/issues/${issueId}`);
+            setIssues(issues.filter(issue => issue.id !== issueId));
+            setShowDetailModal(false);
+            setSelectedIssue(null);
+        } catch (error) {
+            alert('Failed to delete task');
+            console.error('Failed to delete issue:', error);
+        }
+    };
+
     const openDetailModal = async (issue: Issue) => {
         try {
             const res = await apiClient.get(`/issues/${issue.id}`);
@@ -326,6 +342,34 @@ const Board: React.FC = () => {
         return issues.filter(issue => issue.status_id === statusId);
     };
 
+    const onDragEnd = async (result: DropResult) => {
+        const { destination, source, draggableId } = result;
+
+        // Dropped outside any droppable
+        if (!destination) return;
+
+        // Dropped in the same position
+        if (destination.droppableId === source.droppableId && destination.index === source.index) {
+            return;
+        }
+
+        const issueId = parseInt(draggableId);
+        const newStatusId = parseInt(destination.droppableId);
+
+        // Optimistically update UI
+        setIssues(issues.map(issue =>
+            issue.id === issueId ? { ...issue, status_id: newStatusId } : issue
+        ));
+
+        // Update backend
+        try {
+            await handleStatusChange(issueId, newStatusId);
+        } catch (error) {
+            // Revert on error
+            setIssues(issues);
+        }
+    };
+
     if (loading && !statuses.length) {
         return (
             <div className="page-layout">
@@ -365,67 +409,84 @@ const Board: React.FC = () => {
                     </div>
                 </header>
 
-                <div className="board-container">
-                    {statuses.map(status => (
-                        <div key={status.id} className="board-column">
-                            <div className="column-header" style={{ borderTopColor: status.color }}>
-                                <h3>{status.name}</h3>
-                                <span className="task-count">{getIssuesByStatus(status.id).length}</span>
-                            </div>
-                            <div className="column-content">
-                                {getIssuesByStatus(status.id).map(issue => (
-                                    <div
-                                        key={issue.id}
-                                        className={`task-card ${issue.is_on_hold ? 'on-hold' : ''}`}
-                                        onClick={() => openDetailModal(issue)}
-                                    >
-                                        {issue.is_on_hold && (
-                                            <div className="hold-badge">⏸️ ON HOLD</div>
-                                        )}
-                                        <div className={`task-priority ${getPriorityClass(issue.priority)}`}>
-                                            {issue.priority}
-                                        </div>
-                                        <h4>{issue.title}</h4>
-                                        {issue.description && (
-                                            <p className="task-desc">{issue.description.substring(0, 80)}...</p>
-                                        )}
-                                        <div className="task-actions" onClick={e => e.stopPropagation()}>
-                                            <select
-                                                value={issue.status_id}
-                                                onChange={(e) => handleStatusChange(issue.id, Number(e.target.value))}
-                                                className="status-select"
-                                            >
-                                                {statuses.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                                ))}
-                                            </select>
-                                            {issue.is_on_hold ? (
-                                                <button
-                                                    className="btn-action resume"
-                                                    onClick={() => handleResumeIssue(issue.id)}
-                                                    title="Resume task"
-                                                >
-                                                    ▶️
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    className="btn-action hold"
-                                                    onClick={() => openHoldModal(issue)}
-                                                    title="Put on hold"
-                                                >
-                                                    ⏸️
-                                                </button>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <div className="board-container">
+                        {statuses.map(status => (
+                            <div key={status.id} className="board-column">
+                                <div className="column-header" style={{ borderTopColor: status.color }}>
+                                    <h3>{status.name}</h3>
+                                    <span className="task-count">{getIssuesByStatus(status.id).length}</span>
+                                </div>
+                                <Droppable droppableId={String(status.id)}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            className={`column-content ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                                        >
+                                            {getIssuesByStatus(status.id).map((issue, index) => (
+                                                <Draggable key={issue.id} draggableId={String(issue.id)} index={index}>
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            className={`task-card ${issue.is_on_hold ? 'on-hold' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
+                                                            onClick={() => openDetailModal(issue)}
+                                                        >
+                                                            {issue.is_on_hold && (
+                                                                <div className="hold-badge">⏸️ ON HOLD</div>
+                                                            )}
+                                                            <div className={`task-priority ${getPriorityClass(issue.priority)}`}>
+                                                                {issue.priority}
+                                                            </div>
+                                                            <h4>{issue.title}</h4>
+                                                            {issue.description && (
+                                                                <p className="task-desc">{issue.description.substring(0, 80)}...</p>
+                                                            )}
+                                                            <div className="task-actions" onClick={e => e.stopPropagation()}>
+                                                                <select
+                                                                    value={issue.status_id}
+                                                                    onChange={(e) => handleStatusChange(issue.id, Number(e.target.value))}
+                                                                    className="status-select"
+                                                                >
+                                                                    {statuses.map(s => (
+                                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {issue.is_on_hold ? (
+                                                                    <button
+                                                                        className="btn-action resume"
+                                                                        onClick={() => handleResumeIssue(issue.id)}
+                                                                        title="Resume task"
+                                                                    >
+                                                                        ▶️
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        className="btn-action hold"
+                                                                        onClick={() => openHoldModal(issue)}
+                                                                        title="Put on hold"
+                                                                    >
+                                                                        ⏸️
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                            {getIssuesByStatus(status.id).length === 0 && (
+                                                <div className="empty-column">No tasks</div>
                                             )}
                                         </div>
-                                    </div>
-                                ))}
-                                {getIssuesByStatus(status.id).length === 0 && (
-                                    <div className="empty-column">No tasks</div>
-                                )}
+                                    )}
+                                </Droppable>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                </DragDropContext>
 
                 {/* Create Modal */}
                 {showCreateModal && (
@@ -734,6 +795,12 @@ const Board: React.FC = () => {
                             </div>
 
                             <div className="modal-actions">
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => handleDeleteIssue(selectedIssue.id)}
+                                >
+                                    🗑️ Delete
+                                </button>
                                 {selectedIssue.is_on_hold ? (
                                     <button
                                         className="btn btn-success"
