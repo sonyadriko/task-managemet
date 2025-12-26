@@ -22,6 +22,12 @@ interface Issue {
     created_by: number;
     is_on_hold?: boolean;
     hold_reasons?: HoldReason[];
+    deadline?: string;
+    assignments?: {
+        start_date?: string;
+        end_date?: string;
+        user?: { full_name: string };
+    }[];
 }
 
 interface Status {
@@ -71,6 +77,39 @@ const Board: React.FC = () => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [editingDate, setEditingDate] = useState<string | null>(null);
+
+    const handleUpdateDeadline = async (deadline: string) => {
+        if (!selectedIssue) return;
+        try {
+            await apiClient.put(`/issues/${selectedIssue.id}`, {
+                ...selectedIssue,
+                deadline: deadline || null
+            });
+            setSelectedIssue({ ...selectedIssue, deadline: deadline || undefined });
+            setIssues(issues.map(i => i.id === selectedIssue.id ? { ...i, deadline: deadline || undefined } : i));
+        } catch (error) {
+            alert('Failed to update deadline');
+        }
+        setEditingDate(null);
+    };
+
+    const handleUpdateAssignmentDates = async (startDate: string, endDate: string) => {
+        if (!selectedIssue || !selectedIssue.assignments?.[0]) return;
+        try {
+            await apiClient.post(`/issues/${selectedIssue.id}/assign`, {
+                user_id: selectedIssue.assignments[0].user?.full_name ? undefined : 0,
+                start_date: startDate,
+                end_date: endDate
+            });
+            // Refresh issue data
+            const res = await apiClient.get(`/issues/${selectedIssue.id}`);
+            setSelectedIssue(res.data);
+        } catch (error) {
+            alert('Failed to update dates');
+        }
+        setEditingDate(null);
+    };
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -488,6 +527,77 @@ const Board: React.FC = () => {
                                     <label>On Hold</label>
                                     <span>{selectedIssue.is_on_hold ? '⏸️ Yes' : '▶️ No'}</span>
                                 </div>
+                                <div className="detail-item editable" onClick={() => setEditingDate('deadline')}>
+                                    <label>📅 Deadline</label>
+                                    {editingDate === 'deadline' ? (
+                                        <input
+                                            type="date"
+                                            className="form-input date-input"
+                                            defaultValue={selectedIssue.deadline?.split('T')[0] || ''}
+                                            autoFocus
+                                            onBlur={(e) => handleUpdateDeadline(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleUpdateDeadline((e.target as HTMLInputElement).value);
+                                                if (e.key === 'Escape') setEditingDate(null);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    ) : (
+                                        <span className="editable-value">
+                                            {selectedIssue.deadline ? new Date(selectedIssue.deadline).toLocaleDateString() : '— Click to set'}
+                                        </span>
+                                    )}
+                                </div>
+                                {selectedIssue.assignments && selectedIssue.assignments[0] && (
+                                    <>
+                                        <div className="detail-item editable" onClick={() => setEditingDate('start')}>
+                                            <label>🚀 Start Date</label>
+                                            {editingDate === 'start' ? (
+                                                <input
+                                                    type="date"
+                                                    className="form-input date-input"
+                                                    defaultValue={selectedIssue.assignments[0].start_date?.split('T')[0] || ''}
+                                                    autoFocus
+                                                    onBlur={(e) => handleUpdateAssignmentDates(
+                                                        e.target.value,
+                                                        selectedIssue.assignments![0].end_date?.split('T')[0] || ''
+                                                    )}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Escape') setEditingDate(null);
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            ) : (
+                                                <span className="editable-value">
+                                                    {selectedIssue.assignments[0].start_date ? new Date(selectedIssue.assignments[0].start_date).toLocaleDateString() : '—'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="detail-item editable" onClick={() => setEditingDate('end')}>
+                                            <label>🏁 End Date</label>
+                                            {editingDate === 'end' ? (
+                                                <input
+                                                    type="date"
+                                                    className="form-input date-input"
+                                                    defaultValue={selectedIssue.assignments[0].end_date?.split('T')[0] || ''}
+                                                    autoFocus
+                                                    onBlur={(e) => handleUpdateAssignmentDates(
+                                                        selectedIssue.assignments![0].start_date?.split('T')[0] || '',
+                                                        e.target.value
+                                                    )}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Escape') setEditingDate(null);
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            ) : (
+                                                <span className="editable-value">
+                                                    {selectedIssue.assignments[0].end_date ? new Date(selectedIssue.assignments[0].end_date).toLocaleDateString() : '—'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             {selectedIssue.description && (

@@ -22,6 +22,7 @@ type Issue struct {
 	Title       string         `gorm:"size:500;not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description"`
 	Priority    IssuePriority  `gorm:"type:issue_priority;default:NORMAL" json:"priority"`
+	Deadline    *time.Time     `gorm:"type:date" json:"deadline,omitempty"`
 	CreatedBy   uint           `json:"created_by"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
