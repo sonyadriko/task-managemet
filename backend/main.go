@@ -33,6 +33,7 @@ func main() {
 	assignmentRepo := repositories.NewAssignmentRepository(db)
 	calendarRepo := repositories.NewCalendarRepository(db)
 	statusRepo := repositories.NewStatusRepository(db)
+	attachmentRepo := repositories.NewAttachmentRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo)
@@ -50,6 +51,17 @@ func main() {
 	issueHandler := handlers.NewIssueHandler(issueService, assignmentService, permissionService)
 	calendarHandler := handlers.NewCalendarHandler(calendarService, permissionService)
 	statusHandler := handlers.NewStatusHandler(statusRepo, permissionService)
+
+	// Initialize storage service (optional - for file attachments)
+	var attachmentHandler *handlers.AttachmentHandler
+	storageService, err := services.NewStorageService()
+	if err != nil {
+		log.Printf("Warning: Storage service not configured: %v", err)
+		log.Println("File attachment feature will be disabled.")
+	} else {
+		attachmentHandler = handlers.NewAttachmentHandler(attachmentRepo, storageService)
+		log.Println("Storage service (Cloudflare R2) initialized successfully")
+	}
 
 	// Setup Gin router
 	router := gin.Default()
@@ -118,6 +130,21 @@ func main() {
 			issues.POST("/:id/resume", issueHandler.Resume)
 			issues.GET("/:id/activities", issueHandler.GetActivities)
 			issues.POST("/:id/worklog", issueHandler.LogWork)
+
+			// Attachments (if storage service is configured)
+			if attachmentHandler != nil {
+				issues.GET("/:id/attachments", attachmentHandler.List)
+				issues.POST("/:id/attachments", attachmentHandler.Upload)
+			}
+		}
+
+		// Attachments (standalone routes)
+		if attachmentHandler != nil {
+			attachments := api.Group("/attachments")
+			{
+				attachments.GET("/:id/download", attachmentHandler.Download)
+				attachments.DELETE("/:id", attachmentHandler.Delete)
+			}
 		}
 
 		// Calendar

@@ -37,6 +37,15 @@ interface Team {
     name: string;
 }
 
+interface Attachment {
+    id: number;
+    original_filename: string;
+    file_size: number;
+    mime_type: string;
+    created_at: string;
+    user?: { full_name: string };
+}
+
 const Board: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
@@ -49,6 +58,9 @@ const Board: React.FC = () => {
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [holdReason, setHoldReason] = useState('');
     const [newIssue, setNewIssue] = useState({ title: '', description: '', priority: 'NORMAL' });
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -155,9 +167,67 @@ const Board: React.FC = () => {
             const res = await apiClient.get(`/issues/${issue.id}`);
             setSelectedIssue(res.data);
             setShowDetailModal(true);
+            // Fetch attachments
+            try {
+                const attachRes = await apiClient.get(`/issues/${issue.id}/attachments`);
+                setAttachments(attachRes.data || []);
+            } catch {
+                setAttachments([]);
+            }
         } catch (error) {
             console.error('Failed to fetch issue details:', error);
         }
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || !selectedIssue) return;
+        const file = e.target.files[0];
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Maximum size is 10MB');
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await apiClient.post(`/issues/${selectedIssue.id}/attachments`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setAttachments([res.data, ...attachments]);
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to upload file');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleDownloadAttachment = async (attachment: Attachment) => {
+        try {
+            const res = await apiClient.get(`/attachments/${attachment.id}/download`);
+            window.open(res.data.url, '_blank');
+        } catch (error) {
+            alert('Failed to download file');
+        }
+    };
+
+    const handleDeleteAttachment = async (attachmentId: number) => {
+        if (!confirm('Delete this attachment?')) return;
+        try {
+            await apiClient.delete(`/attachments/${attachmentId}`);
+            setAttachments(attachments.filter(a => a.id !== attachmentId));
+        } catch (error) {
+            alert('Failed to delete attachment');
+        }
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
     const getPriorityClass = (priority: string) => {
@@ -408,6 +478,62 @@ const Board: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Attachments Section */}
+                            <div className="detail-section">
+                                <div className="attachments-header">
+                                    <h3>📎 Attachments</h3>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <button
+                                        className="btn btn-secondary btn-sm"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploading}
+                                    >
+                                        {uploading ? '⏳ Uploading...' : '+ Add File'}
+                                    </button>
+                                </div>
+                                {attachments.length > 0 ? (
+                                    <div className="attachments-list">
+                                        {attachments.map(att => (
+                                            <div key={att.id} className="attachment-item">
+                                                <div className="attachment-info">
+                                                    <span className="attachment-name" title={att.original_filename}>
+                                                        📄 {att.original_filename}
+                                                    </span>
+                                                    <span className="attachment-meta">
+                                                        {formatFileSize(att.file_size)} • {new Date(att.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <div className="attachment-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm"
+                                                        onClick={(e) => { e.stopPropagation(); handleDownloadAttachment(att); }}
+                                                        title="Download"
+                                                    >
+                                                        ⬇️
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteAttachment(att.id); }}
+                                                        title="Delete"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="no-attachments">No attachments yet</p>
+                                )}
+                            </div>
 
                             <div className="modal-actions">
                                 {selectedIssue.is_on_hold ? (
