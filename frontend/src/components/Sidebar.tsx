@@ -47,9 +47,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem }) => {
         <aside className="sidebar">
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <span>📋</span>
+                    <span>🌊</span>
                 </div>
-                <h2>Task Manager</h2>
+                <h2>FLOW</h2>
             </div>
 
             <nav className="sidebar-nav">

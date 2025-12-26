@@ -33,10 +33,10 @@ const Login: React.FC = () => {
                 {/* Logo & Branding */}
                 <div className="login-header">
                     <div className="login-logo">
-                        <span className="logo-icon">📋</span>
+                        <span className="logo-icon">🌊</span>
                     </div>
-                    <h1>Task Manager</h1>
-                    <p>Manage your team's tasks with ease</p>
+                    <h1>FLOW</h1>
+                    <p>Streamline your team's workflow</p>
                 </div>
 
                 {/* Login Form */}
@@ -96,7 +96,7 @@ const Login: React.FC = () => {
 
                 {/* Footer */}
                 <div className="login-footer">
-                    <p>Task Management System v1.0</p>
+                    <p>FLOW v1.0</p>
                 </div>
             </div>
         </div>
