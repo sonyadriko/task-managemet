@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
 import './Settings.css';
 
 const Settings: React.FC = () => {
     const { user } = useAuth();
+    const { theme, toggleTheme } = useTheme();
+    const [orgName, setOrgName] = useState('');
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
@@ -14,6 +17,19 @@ const Settings: React.FC = () => {
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchOrgName = async () => {
+            if (!user?.organization_id) return;
+            try {
+                const res = await apiClient.get(`/organizations/${user.organization_id}`);
+                setOrgName(res.data?.name || 'Unknown');
+            } catch {
+                setOrgName('Unknown');
+            }
+        };
+        fetchOrgName();
+    }, [user?.organization_id]);
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,8 +107,8 @@ const Settings: React.FC = () => {
                         <h2>🏢 Organization</h2>
                         <div className="settings-card">
                             <div className="info-row">
-                                <span className="info-label">Organization ID</span>
-                                <span className="info-value">{user?.organization_id}</span>
+                                <span className="info-label">Organization</span>
+                                <span className="info-value">{orgName || 'Loading...'}</span>
                             </div>
                             <div className="info-row">
                                 <span className="info-label">Role</span>
@@ -167,7 +183,11 @@ const Settings: React.FC = () => {
                                     <p>Use dark theme for the interface</p>
                                 </div>
                                 <label className="toggle">
-                                    <input type="checkbox" checked readOnly />
+                                    <input
+                                        type="checkbox"
+                                        checked={theme === 'dark'}
+                                        onChange={toggleTheme}
+                                    />
                                     <span className="toggle-slider"></span>
                                 </label>
                             </div>

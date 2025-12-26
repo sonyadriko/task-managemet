@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [issues, setIssues] = useState<Issue[]>([]);
     const [loading, setLoading] = useState(true);
+    const [orgName, setOrgName] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,6 +38,12 @@ const Dashboard: React.FC = () => {
                     const issuesRes = await apiClient.get(`/issues?team_id=${teamsRes.data[0].id}`);
                     setIssues(issuesRes.data || []);
                 }
+
+                // Fetch org name
+                if (user?.organization_id) {
+                    const orgRes = await apiClient.get(`/organizations/${user.organization_id}`);
+                    setOrgName(orgRes.data?.name || 'Unknown');
+                }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
             } finally {
@@ -44,7 +51,7 @@ const Dashboard: React.FC = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [user?.organization_id]);
 
     const getPriorityClass = (priority: string) => {
         switch (priority) {
@@ -176,8 +183,8 @@ const Dashboard: React.FC = () => {
                             <span className="info-value">{user?.email}</span>
                         </div>
                         <div className="info-card">
-                            <span className="info-label">Organization ID</span>
-                            <span className="info-value">{user?.organization_id}</span>
+                            <span className="info-label">Organization</span>
+                            <span className="info-value">{orgName || 'Loading...'}</span>
                         </div>
                         <div className="info-card">
                             <span className="info-label">Timezone</span>
