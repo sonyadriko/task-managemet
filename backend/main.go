@@ -34,6 +34,7 @@ func main() {
 	calendarRepo := repositories.NewCalendarRepository(db)
 	statusRepo := repositories.NewStatusRepository(db)
 	attachmentRepo := repositories.NewAttachmentRepository(db)
+	commentRepo := repositories.NewCommentRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo)
@@ -51,6 +52,7 @@ func main() {
 	issueHandler := handlers.NewIssueHandler(issueService, assignmentService, permissionService)
 	calendarHandler := handlers.NewCalendarHandler(calendarService, permissionService)
 	statusHandler := handlers.NewStatusHandler(statusRepo, permissionService)
+	commentHandler := handlers.NewCommentHandler(commentRepo)
 
 	// Initialize storage service (optional - for file attachments)
 	var attachmentHandler *handlers.AttachmentHandler
@@ -136,6 +138,12 @@ func main() {
 				issues.GET("/:id/attachments", attachmentHandler.List)
 				issues.POST("/:id/attachments", attachmentHandler.Upload)
 			}
+
+			// Comments
+			issues.GET("/:id/comments", commentHandler.List)
+			issues.POST("/:id/comments", commentHandler.Create)
+			issues.PUT("/:id/comments/:commentId", commentHandler.Update)
+			issues.DELETE("/:id/comments/:commentId", commentHandler.Delete)
 		}
 
 		// Attachments (standalone routes)

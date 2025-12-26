@@ -46,6 +46,14 @@ interface Attachment {
     user?: { full_name: string };
 }
 
+interface Comment {
+    id: number;
+    content: string;
+    user_id: number;
+    created_at: string;
+    user?: { full_name: string };
+}
+
 const Board: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
@@ -61,6 +69,8 @@ const Board: React.FC = () => {
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [newComment, setNewComment] = useState('');
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -174,6 +184,13 @@ const Board: React.FC = () => {
             } catch {
                 setAttachments([]);
             }
+            // Fetch comments
+            try {
+                const commentsRes = await apiClient.get(`/issues/${issue.id}/comments`);
+                setComments(commentsRes.data || []);
+            } catch {
+                setComments([]);
+            }
         } catch (error) {
             console.error('Failed to fetch issue details:', error);
         }
@@ -228,6 +245,27 @@ const Board: React.FC = () => {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    const handleAddComment = async () => {
+        if (!newComment.trim() || !selectedIssue) return;
+        try {
+            const res = await apiClient.post(`/issues/${selectedIssue.id}/comments`, { content: newComment });
+            setComments([...comments, res.data]);
+            setNewComment('');
+        } catch (error) {
+            alert('Failed to add comment');
+        }
+    };
+
+    const handleDeleteComment = async (commentId: number) => {
+        if (!confirm('Delete this comment?')) return;
+        try {
+            await apiClient.delete(`/issues/${selectedIssue?.id}/comments/${commentId}`);
+            setComments(comments.filter(c => c.id !== commentId));
+        } catch (error) {
+            alert('Failed to delete comment');
+        }
     };
 
     const getPriorityClass = (priority: string) => {
@@ -533,6 +571,50 @@ const Board: React.FC = () => {
                                 ) : (
                                     <p className="no-attachments">No attachments yet</p>
                                 )}
+                            </div>
+
+                            {/* Comments Section */}
+                            <div className="detail-section">
+                                <h3>💬 Comments</h3>
+                                <div className="comments-list">
+                                    {comments.length > 0 ? (
+                                        comments.map(comment => (
+                                            <div key={comment.id} className="comment-item">
+                                                <div className="comment-header">
+                                                    <span className="comment-author">{comment.user?.full_name || 'Unknown'}</span>
+                                                    <span className="comment-date">{new Date(comment.created_at).toLocaleString()}</span>
+                                                </div>
+                                                <p className="comment-content">{comment.content}</p>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-danger"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteComment(comment.id); }}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="no-comments">No comments yet</p>
+                                    )}
+                                </div>
+                                <div className="comment-input">
+                                    <textarea
+                                        className="form-input"
+                                        placeholder="Write a comment..."
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        rows={2}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleAddComment}
+                                        disabled={!newComment.trim()}
+                                    >
+                                        Post Comment
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="modal-actions">
