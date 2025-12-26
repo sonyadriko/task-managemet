@@ -26,6 +26,8 @@ const Calendar: React.FC = () => {
     const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [loading, setLoading] = useState(true);
+    const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+    const [showDayModal, setShowDayModal] = useState(false);
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -165,35 +167,76 @@ const Calendar: React.FC = () => {
                         ))}
 
                         {/* Calendar days */}
-                        {days.map((item, index) => (
-                            <div
-                                key={index}
-                                className={`calendar-day ${!item.day ? 'empty' : ''} ${isToday(item.date) ? 'today' : ''}`}
-                            >
-                                {item.day && (
-                                    <>
-                                        <span className="day-number">{item.day}</span>
-                                        <div className="day-events">
-                                            {getEventsForDay(item.date).slice(0, 3).map((event, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="event-item"
-                                                    style={{ backgroundColor: event.status_color }}
-                                                    title={`${event.issue_title} - ${event.user_name}`}
-                                                >
-                                                    {event.issue_title.substring(0, 15)}...
-                                                </div>
-                                            ))}
-                                            {getEventsForDay(item.date).length > 3 && (
-                                                <div className="more-events">
-                                                    +{getEventsForDay(item.date).length - 3} more
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                )}
+                        {days.map((item, index) => {
+                            const dayEvents = getEventsForDay(item.date);
+                            return (
+                                <div
+                                    key={index}
+                                    className={`calendar-day ${!item.day ? 'empty' : ''} ${isToday(item.date) ? 'today' : ''} ${dayEvents.length > 0 ? 'has-events' : ''}`}
+                                    onClick={() => {
+                                        if (item.date && dayEvents.length > 0) {
+                                            setSelectedDay(item.date);
+                                            setShowDayModal(true);
+                                        }
+                                    }}
+                                >
+                                    {item.day && (
+                                        <>
+                                            <span className="day-number">{item.day}</span>
+                                            <div className="day-events">
+                                                {dayEvents.slice(0, 2).map((event, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="event-item"
+                                                        style={{ backgroundColor: event.status_color }}
+                                                        title={`${event.issue_title} - ${event.user_name}`}
+                                                    >
+                                                        <span className="event-title">{event.issue_title}</span>
+                                                    </div>
+                                                ))}
+                                                {dayEvents.length > 2 && (
+                                                    <div className="more-events">
+                                                        +{dayEvents.length - 2} more
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Day Detail Modal */}
+                {showDayModal && selectedDay && (
+                    <div className="modal-overlay" onClick={() => setShowDayModal(false)}>
+                        <div className="modal" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>📅 {selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h2>
+                                <button className="btn-close" onClick={() => setShowDayModal(false)}>✕</button>
                             </div>
-                        ))}
+                            <div className="day-tasks-list">
+                                {getEventsForDay(selectedDay).map((event, idx) => (
+                                    <div key={idx} className="day-task-item">
+                                        <div
+                                            className="task-status-dot"
+                                            style={{ backgroundColor: event.status_color }}
+                                        />
+                                        <div className="task-info">
+                                            <h4>{event.issue_title}</h4>
+                                            <div className="task-meta">
+                                                <span className="assignee">👤 {event.user_name}</span>
+                                                <span className={`priority priority-${event.priority.toLowerCase()}`}>
+                                                    {event.priority}
+                                                </span>
+                                                <span className="status">{event.status_name}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </main>

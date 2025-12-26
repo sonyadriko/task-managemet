@@ -8,6 +8,7 @@ import Board from './pages/Board';
 import Calendar from './pages/Calendar';
 import Teams from './pages/Teams';
 import Settings from './pages/Settings';
+import Meetings from './pages/Meetings';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -102,6 +103,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/meetings"
+              element={
+                <ProtectedRoute>
+                  <Meetings />
                 </ProtectedRoute>
               }
             />

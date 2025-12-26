@@ -19,6 +19,7 @@ interface Issue {
     description: string;
     priority: string;
     status_id: number;
+    team_id: number;
     created_by: number;
     is_on_hold?: boolean;
     hold_reasons?: HoldReason[];
@@ -83,12 +84,17 @@ const Board: React.FC = () => {
         if (!selectedIssue) return;
         try {
             await apiClient.put(`/issues/${selectedIssue.id}`, {
-                ...selectedIssue,
+                title: selectedIssue.title,
+                description: selectedIssue.description || '',
+                priority: selectedIssue.priority,
+                team_id: selectedIssue.team_id || selectedTeam,
+                status_id: selectedIssue.status_id,
                 deadline: deadline || null
             });
             setSelectedIssue({ ...selectedIssue, deadline: deadline || undefined });
             setIssues(issues.map(i => i.id === selectedIssue.id ? { ...i, deadline: deadline || undefined } : i));
         } catch (error) {
+            console.error('Failed to update deadline:', error);
             alert('Failed to update deadline');
         }
         setEditingDate(null);

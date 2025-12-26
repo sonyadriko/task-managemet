@@ -35,6 +35,7 @@ func main() {
 	statusRepo := repositories.NewStatusRepository(db)
 	attachmentRepo := repositories.NewAttachmentRepository(db)
 	commentRepo := repositories.NewCommentRepository(db)
+	meetingRepo := repositories.NewMeetingRepository(db)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo)
@@ -53,6 +54,7 @@ func main() {
 	calendarHandler := handlers.NewCalendarHandler(calendarService, permissionService)
 	statusHandler := handlers.NewStatusHandler(statusRepo, permissionService)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
+	meetingHandler := handlers.NewMeetingHandler(meetingRepo)
 
 	// Initialize storage service (optional - for file attachments)
 	var attachmentHandler *handlers.AttachmentHandler
@@ -159,6 +161,18 @@ func main() {
 		calendar := api.Group("/calendar")
 		{
 			calendar.GET("", calendarHandler.GetCalendar)
+		}
+
+		// Meetings
+		meetings := api.Group("/meetings")
+		{
+			meetings.GET("", meetingHandler.List)
+			meetings.POST("", meetingHandler.Create)
+			meetings.GET("/:id", meetingHandler.GetByID)
+			meetings.PUT("/:id", meetingHandler.Update)
+			meetings.DELETE("/:id", meetingHandler.Delete)
+			meetings.POST("/:id/attendees", meetingHandler.AddAttendee)
+			meetings.POST("/:id/respond", meetingHandler.RespondToMeeting)
 		}
 	}
 

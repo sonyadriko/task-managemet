@@ -39,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem }) => {
         { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/dashboard' },
         { id: 'board', icon: '📊', label: 'Board', path: '/board' },
         { id: 'calendar', icon: '📅', label: 'Calendar', path: '/calendar' },
+        { id: 'meetings', icon: '🗓️', label: 'Meetings', path: '/meetings' },
         { id: 'teams', icon: '👥', label: 'Teams', path: '/teams' },
         { id: 'settings', icon: '⚙️', label: 'Settings', path: '/settings' },
     ];
