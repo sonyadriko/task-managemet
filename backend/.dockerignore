@@ -1,0 +1,22 @@
+# Binaries
+main
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Go workspace
+go.work
+
+# IDE
+.vscode
+.idea
+
+# Misc
+.DS_Store
+*.log
+.env
+tmp/
