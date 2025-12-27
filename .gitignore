@@ -1,21 +1,89 @@
+# =========================
 # General
+# =========================
 .DS_Store
 *.log
+*.tmp
+*.bak
 
-# Database
-*.db
-*.sqlite
-
+# =========================
 # Environment files
+# =========================
 .env
 .env.local
 .env.*.local
+*.env
 
-# IDE
+# =========================
+# IDE / Editors
+# =========================
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 
-# Temporary files
-*.tmp
+# =========================
+# Backend (Go)
+# =========================
+backend/main
+backend/*.exe
+backend/*.dll
+backend/*.so
+backend/*.dylib
+backend/tmp/
+backend/uploads/
+
+# =========================
+# Frontend (Node/React)
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# =========================
+# Database
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Testing
+# =========================
+coverage/
+*.test
+*.out
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS Generated
+# =========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Secrets / Credentials
+# =========================
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
