@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
+import { usePermissions } from '../contexts/PermissionContext';
 import './Teams.css';
 
 interface Team {
@@ -23,6 +24,7 @@ interface TeamMember {
 }
 
 const Teams: React.FC = () => {
+    const { canManage, getTeamPermission, permissions } = usePermissions();
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [members, setMembers] = useState<TeamMember[]>([]);
@@ -172,9 +174,11 @@ const Teams: React.FC = () => {
                         <p>Manage your teams and members</p>
                     </div>
                     <div className="header-actions">
-                        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                            + New Team
-                        </button>
+                        {permissions?.teams.some(t => t.can_manage) && (
+                            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                                + New Team
+                            </button>
+                        )}
                     </div>
                 </header>
 
@@ -212,12 +216,19 @@ const Teams: React.FC = () => {
                                 <div className="members-section">
                                     <div className="members-header">
                                         <h3>Team Members ({members.length})</h3>
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => setShowAddMemberModal(true)}
-                                        >
-                                            + Add Member
-                                        </button>
+                                        {canManage(selectedTeam.id) && (
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={() => setShowAddMemberModal(true)}
+                                            >
+                                                + Add Member
+                                            </button>
+                                        )}
+                                        {getTeamPermission(selectedTeam.id) && (
+                                            <span className={`role-badge ${getTeamPermission(selectedTeam.id)?.role}`}>
+                                                {getTeamPermission(selectedTeam.id)?.role}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="members-grid">
                                         {members.map(member => (
@@ -232,13 +243,15 @@ const Teams: React.FC = () => {
                                                         {member.role}
                                                     </span>
                                                 </div>
-                                                <button
-                                                    className="btn-remove"
-                                                    onClick={() => handleRemoveMember(member.user_id)}
-                                                    title="Remove member"
-                                                >
-                                                    ✕
-                                                </button>
+                                                {canManage(selectedTeam.id) && (
+                                                    <button
+                                                        className="btn-remove"
+                                                        onClick={() => handleRemoveMember(member.user_id)}
+                                                        title="Remove member"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
                                         {members.length === 0 && (
@@ -264,132 +277,136 @@ const Teams: React.FC = () => {
                 </div>
 
                 {/* Create Team Modal */}
-                {showCreateModal && (
-                    <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-                        <div className="modal" onClick={e => e.stopPropagation()}>
-                            <h2>Create New Team</h2>
-                            <form onSubmit={handleCreateTeam}>
-                                <div className="form-group">
-                                    <label className="form-label">Team Name</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={newTeam.name}
-                                        onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Description</label>
-                                    <textarea
-                                        className="form-input"
-                                        rows={3}
-                                        value={newTeam.description}
-                                        onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
-                                    />
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn btn-primary">
-                                        Create Team
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
-                {/* Add Member Modal */}
-                {showAddMemberModal && (
-                    <div className="modal-overlay" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); }}>
-                        <div className="modal" onClick={e => e.stopPropagation()}>
-                            <h2>{isNewUser ? '👤 Create & Add User' : 'Add Team Member'}</h2>
-                            <p className="modal-subtitle">
-                                {isNewUser
-                                    ? 'This email is not registered. Fill in the details to create a new user.'
-                                    : `Add a user to ${selectedTeam?.name}`
-                                }
-                            </p>
-
-                            {addMemberError && (
-                                <div className={`alert ${isNewUser ? 'alert-warning' : 'alert-error'}`}>
-                                    <span>{isNewUser ? '💡' : '⚠️'}</span> {addMemberError}
-                                </div>
-                            )}
-
-                            {addMemberSuccess && (
-                                <div className="alert alert-success">
-                                    <span>✅</span> {addMemberSuccess}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleAddMember}>
-                                <div className="form-group">
-                                    <label className="form-label">User Email</label>
-                                    <input
-                                        type="email"
-                                        className="form-input"
-                                        placeholder="Enter user email"
-                                        value={newMember.email}
-                                        onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-                                        required
-                                        disabled={isNewUser}
-                                    />
-                                    {!isNewUser && (
-                                        <small className="form-hint">Enter email of existing user, or enter new email to invite</small>
-                                    )}
-                                </div>
-
-                                {isNewUser && (
+                {
+                    showCreateModal && (
+                        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+                            <div className="modal" onClick={e => e.stopPropagation()}>
+                                <h2>Create New Team</h2>
+                                <form onSubmit={handleCreateTeam}>
                                     <div className="form-group">
-                                        <label className="form-label">Full Name *</label>
+                                        <label className="form-label">Team Name</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="Enter full name"
-                                            value={newMember.fullName}
-                                            onChange={(e) => setNewMember({ ...newMember, fullName: e.target.value })}
+                                            value={newTeam.name}
+                                            onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
                                             required
-                                            autoFocus
                                         />
-                                        <small className="form-hint">New user will be created with default password: password123</small>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Description</label>
+                                        <textarea
+                                            className="form-input"
+                                            rows={3}
+                                            value={newTeam.description}
+                                            onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="modal-actions">
+                                        <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-primary">
+                                            Create Team
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* Add Member Modal */}
+                {
+                    showAddMemberModal && (
+                        <div className="modal-overlay" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); }}>
+                            <div className="modal" onClick={e => e.stopPropagation()}>
+                                <h2>{isNewUser ? '👤 Create & Add User' : 'Add Team Member'}</h2>
+                                <p className="modal-subtitle">
+                                    {isNewUser
+                                        ? 'This email is not registered. Fill in the details to create a new user.'
+                                        : `Add a user to ${selectedTeam?.name}`
+                                    }
+                                </p>
+
+                                {addMemberError && (
+                                    <div className={`alert ${isNewUser ? 'alert-warning' : 'alert-error'}`}>
+                                        <span>{isNewUser ? '💡' : '⚠️'}</span> {addMemberError}
                                     </div>
                                 )}
 
-                                <div className="form-group">
-                                    <label className="form-label">Role</label>
-                                    <select
-                                        className="form-input"
-                                        value={newMember.role}
-                                        onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
-                                    >
-                                        <option value="member">Member</option>
-                                        <option value="assistant">Assistant</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="stakeholder">Stakeholder</option>
-                                    </select>
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="button" className="btn btn-secondary" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); setNewMember({ email: '', fullName: '', role: 'member' }); }}>
-                                        Cancel
-                                    </button>
+                                {addMemberSuccess && (
+                                    <div className="alert alert-success">
+                                        <span>✅</span> {addMemberSuccess}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleAddMember}>
+                                    <div className="form-group">
+                                        <label className="form-label">User Email</label>
+                                        <input
+                                            type="email"
+                                            className="form-input"
+                                            placeholder="Enter user email"
+                                            value={newMember.email}
+                                            onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                                            required
+                                            disabled={isNewUser}
+                                        />
+                                        {!isNewUser && (
+                                            <small className="form-hint">Enter email of existing user, or enter new email to invite</small>
+                                        )}
+                                    </div>
+
                                     {isNewUser && (
-                                        <button type="button" className="btn btn-secondary" onClick={() => { setIsNewUser(false); setAddMemberError(''); setNewMember({ ...newMember, fullName: '' }); }}>
-                                            Try Different Email
-                                        </button>
+                                        <div className="form-group">
+                                            <label className="form-label">Full Name *</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                placeholder="Enter full name"
+                                                value={newMember.fullName}
+                                                onChange={(e) => setNewMember({ ...newMember, fullName: e.target.value })}
+                                                required
+                                                autoFocus
+                                            />
+                                            <small className="form-hint">New user will be created with default password: password123</small>
+                                        </div>
                                     )}
-                                    <button type="submit" className="btn btn-primary">
-                                        {isNewUser ? 'Create & Add User' : 'Add Member'}
-                                    </button>
-                                </div>
-                            </form>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Role</label>
+                                        <select
+                                            className="form-input"
+                                            value={newMember.role}
+                                            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
+                                        >
+                                            <option value="member">Member</option>
+                                            <option value="assistant">Assistant</option>
+                                            <option value="manager">Manager</option>
+                                            <option value="stakeholder">Stakeholder</option>
+                                        </select>
+                                    </div>
+                                    <div className="modal-actions">
+                                        <button type="button" className="btn btn-secondary" onClick={() => { setShowAddMemberModal(false); setAddMemberError(''); setIsNewUser(false); setNewMember({ email: '', fullName: '', role: 'member' }); }}>
+                                            Cancel
+                                        </button>
+                                        {isNewUser && (
+                                            <button type="button" className="btn btn-secondary" onClick={() => { setIsNewUser(false); setAddMemberError(''); setNewMember({ ...newMember, fullName: '' }); }}>
+                                                Try Different Email
+                                            </button>
+                                        )}
+                                        <button type="submit" className="btn btn-primary">
+                                            {isNewUser ? 'Create & Add User' : 'Add Member'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )
+                }
+            </main >
+        </div >
     );
 };
 

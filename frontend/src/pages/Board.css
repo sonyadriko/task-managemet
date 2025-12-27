@@ -5,6 +5,33 @@
     padding-bottom: var(--spacing-lg);
 }
 
+/* Role Badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.role-badge.stakeholder {
+    background: rgba(107, 114, 128, 0.2);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+}
+
+.role-badge.manager {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-success);
+}
+
+.role-badge.member {
+    background: rgba(72, 119, 186, 0.2);
+    color: var(--color-primary);
+}
+
 .board-column {
     min-width: 300px;
     max-width: 300px;
@@ -158,6 +185,8 @@
     padding: var(--spacing-xl);
     width: 100%;
     max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
     animation: fadeIn 0.2s ease;
     box-shadow: var(--shadow-lg);
 }

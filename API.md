@@ -23,20 +23,6 @@ Request:
 }
 ```
 
-Response:
-```json
-{
-  "token": "eyJhbGc...",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "full_name": "John Doe",
-    "organization_id": 1,
-    "timezone": "Asia/Jakarta"
-  }
-}
-```
-
 ### Login
 **POST** `/auth/login`
 
@@ -48,191 +34,182 @@ Request:
 }
 ```
 
-Response: Same as register
+### Change Password
+**POST** `/auth/change-password`
+
+Request:
+```json
+{
+  "current_password": "oldpassword",
+  "new_password": "newpassword123"
+}
+```
+
+---
+
+## User & Permissions
+
+### Get My Permissions
+**GET** `/users/me/permissions`
+
+Returns current user's team roles and capabilities.
+
+Response:
+```json
+{
+  "user_id": 1,
+  "email": "admin@demo.com",
+  "full_name": "Admin User",
+  "teams": [
+    {
+      "team_id": 1,
+      "team_name": "Engineering",
+      "role": "manager",
+      "can_edit": true,
+      "can_delete": true,
+      "can_manage": true
+    }
+  ],
+  "is_org_admin": false
+}
+```
+
+---
 
 ## Organizations
 
-### List Organizations
-**GET** `/organizations`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/organizations` | List organizations |
+| POST | `/organizations` | Create organization |
+| GET | `/organizations/:id` | Get organization |
+| PUT | `/organizations/:id` | Update organization |
+| DELETE | `/organizations/:id` | Delete organization |
 
-### Create Organization
-**POST** `/organizations`
-
-Request:
-```json
-{
-  "name": "My Company",
-  "description": "Company description"
-}
-```
-
-### Get Organization
-**GET** `/organizations/:id`
-
-### Update Organization
-**PUT** `/organizations/:id`
-
-### Delete Organization
-**DELETE** `/organizations/:id`
+---
 
 ## Teams
 
-### List Teams
-**GET** `/teams`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/teams` | List teams (user's organization) |
+| POST | `/teams` | Create team |
+| GET | `/teams/:id` | Get team details |
+| PUT | `/teams/:id` | Update team |
+| DELETE | `/teams/:id` | Delete team |
+| GET | `/teams/:id/members` | Get team members |
+| POST | `/teams/:id/members` | Add member |
+| DELETE | `/teams/:id/members/:userId` | Remove member |
 
-Returns teams for authenticated user's organization.
+**Roles:** `stakeholder`, `member`, `assistant`, `manager`
 
-### Create Team
-**POST** `/teams`
-
-Request:
-```json
-{
-  "name": "Engineering",
-  "description": "Software development team",
-  "parent_team_id": null
-}
-```
-
-### Get Team
-**GET** `/teams/:id`
-
-### Update Team
-**PUT** `/teams/:id`
-
-### Delete Team
-**DELETE** `/teams/:id`
-
-### Get Team Members
-**GET** `/teams/:id/members`
-
-### Add Team Member
-**POST** `/teams/:id/members`
-
-Request:
-```json
-{
-  "user_id": 2,
-  "role": "member"
-}
-```
-
-Roles: `stakeholder`, `member`, `assistant`, `manager`
-
-### Remove Team Member
-**DELETE** `/teams/:id/members/:userId`
+---
 
 ## Issue Statuses
 
-### Get Team Statuses
-**GET** `/statuses/team/:teamId`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/statuses` | Get organization statuses |
+| POST | `/statuses` | Create status |
+| PUT | `/statuses/:id` | Update status |
+| DELETE | `/statuses/:id` | Delete status |
 
-### Create Status
-**POST** `/statuses`
-
-Request:
-```json
-{
-  "team_id": 1,
-  "name": "IN_PROGRESS",
-  "position": 2,
-  "is_final": false,
-  "color": "#3B82F6"
-}
-```
-
-### Update Status
-**PUT** `/statuses/:id`
-
-### Delete Status
-**DELETE** `/statuses/:id`
+---
 
 ## Issues
 
-### List Issues
-**GET** `/issues?team_id=1`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/issues?team_id=1` | List issues for team |
+| POST | `/issues` | Create issue |
+| GET | `/issues/:id` | Get issue details |
+| PUT | `/issues/:id` | Update issue (with deadline) |
+| DELETE | `/issues/:id` | Delete issue |
+| POST | `/issues/:id/assign` | Assign to user |
+| POST | `/issues/:id/status` | Update status |
+| POST | `/issues/:id/hold` | Put on hold |
+| POST | `/issues/:id/resume` | Resume from hold |
+| GET | `/issues/:id/activities` | Get activity log |
+| POST | `/issues/:id/worklog` | Log work |
 
-Query params:
-- `team_id` (required): Filter by team
+**Priority:** `LOW`, `NORMAL`, `HIGH`, `URGENT`
 
-### Create Issue
-**POST** `/issues`
-
-Request:
+### Create/Update Issue
 ```json
 {
   "team_id": 1,
   "status_id": 1,
-  "title": "Implement user authentication",
-  "description": "Add JWT-based authentication",
-  "priority": "HIGH"
+  "title": "Issue title",
+  "description": "Description",
+  "priority": "HIGH",
+  "deadline": "2025-12-31"
 }
 ```
 
-Priority: `LOW`, `NORMAL`, `HIGH`, `URGENT`
+---
 
-### Get Issue
-**GET** `/issues/:id`
+## Comments
 
-### Update Issue
-**PUT** `/issues/:id`
-
-### Delete Issue
-**DELETE** `/issues/:id`
-
-### Assign Issue
-**POST** `/issues/:id/assign`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/issues/:id/comments` | List comments |
+| POST | `/issues/:id/comments` | Add comment |
+| PUT | `/issues/:id/comments/:commentId` | Update comment |
+| DELETE | `/issues/:id/comments/:commentId` | Delete comment |
 
 Request:
 ```json
 {
-  "user_id": 3,
-  "start_date": "2025-12-26T00:00:00Z",
-  "end_date": "2025-12-30T00:00:00Z"
+  "content": "This is a comment"
 }
 ```
 
-### Update Issue Status
-**POST** `/issues/:id/status`
+---
 
-Request:
+## Attachments
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/issues/:id/attachments` | List attachments |
+| POST | `/issues/:id/attachments` | Upload file (multipart) |
+| GET | `/attachments/:id/download` | Download file |
+| DELETE | `/attachments/:id` | Delete attachment |
+
+**Allowed types:** Images, Documents (PDF, DOC, XLS), Text files
+
+---
+
+## Meetings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/meetings?team_id=1` | List team meetings |
+| POST | `/meetings` | Create meeting |
+| GET | `/meetings/:id` | Get meeting details |
+| PUT | `/meetings/:id` | Update meeting |
+| DELETE | `/meetings/:id` | Delete meeting |
+| POST | `/meetings/:id/attendees` | Add attendee |
+| POST | `/meetings/:id/respond` | Respond (accept/decline) |
+
+### Create Meeting
 ```json
 {
-  "status_id": 2
+  "team_id": 1,
+  "title": "Sprint Planning",
+  "description": "Weekly planning meeting",
+  "meeting_date": "2025-12-27",
+  "start_time": "09:00",
+  "end_time": "10:00",
+  "location": "Conference Room A",
+  "is_recurring": false,
+  "attendee_ids": [2, 3, 4]
 }
 ```
 
-### Put Issue on Hold
-**POST** `/issues/:id/hold`
-
-Request:
-```json
-{
-  "reason": "Waiting for client approval"
-}
-```
-
-### Resume Issue
-**POST** `/issues/:id/resume`
-
-### Get Issue Activities
-**GET** `/issues/:id/activities`
-
-### Log Work
-**POST** `/issues/:id/worklog`
-
-Request:
-```json
-{
-  "work_date": "2025-12-25T00:00:00Z",
-  "minutes_spent": 120,
-  "notes": "Implemented authentication logic"
-}
-```
+---
 
 ## Calendar
 
-### Get Calendar Events
 **GET** `/calendar`
 
 Query params:
@@ -241,34 +218,31 @@ Query params:
 - `team_id` (optional): Filter by team
 - `user_id` (optional): Filter by user
 
-Example:
-```
-GET /calendar?start_date=2025-12-01&end_date=2025-12-31&team_id=1
-```
+---
+
+## Analytics
+
+### Dashboard Analytics
+**GET** `/analytics/dashboard`
 
 Response:
 ```json
-[
-  {
-    "issue_id": 1,
-    "issue_title": "Setup CI/CD",
-    "priority": "HIGH",
-    "status_id": 2,
-    "status_name": "IN_PROGRESS",
-    "status_color": "#3B82F6",
-    "user_id": 3,
-    "user_name": "Developer One",
-    "team_id": 1,
-    "team_name": "Engineering",
-    "start_date": "2025-12-25T00:00:00Z",
-    "end_date": "2025-12-30T00:00:00Z"
-  }
-]
+{
+  "total_tasks": 10,
+  "completed_tasks": 5,
+  "in_progress_tasks": 3,
+  "on_hold_tasks": 1,
+  "overdue_tasks": 1,
+  "tasks_by_status": [...],
+  "tasks_by_priority": [...],
+  "weekly_activity": [...],
+  "team_stats": [...]
+}
 ```
 
-## Error Responses
+---
 
-All endpoints return errors in this format:
+## Error Responses
 
 ```json
 {
@@ -276,9 +250,10 @@ All endpoints return errors in this format:
 }
 ```
 
-Common status codes:
-- `400` - Bad Request (validation error)
-- `401` - Unauthorized (missing/invalid token)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found
-- `500` - Internal Server Error
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 500 | Server Error |

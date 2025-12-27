@@ -55,6 +55,7 @@ func main() {
 	statusHandler := handlers.NewStatusHandler(statusRepo, permissionService)
 	commentHandler := handlers.NewCommentHandler(commentRepo)
 	meetingHandler := handlers.NewMeetingHandler(meetingRepo)
+	analyticsHandler := handlers.NewAnalyticsHandler(db)
 
 	// Initialize storage service (optional - for file attachments)
 	var attachmentHandler *handlers.AttachmentHandler
@@ -84,6 +85,10 @@ func main() {
 	// Protected routes
 	api := router.Group("/api")
 	api.Use(middleware.AuthMiddleware())
+
+	// User routes
+	userHandler := handlers.NewUserHandler(db)
+	api.GET("/users/me/permissions", userHandler.GetMyPermissions)
 
 	// Change password (needs auth)
 	api.POST("/auth/change-password", authHandler.ChangePassword)
@@ -174,6 +179,9 @@ func main() {
 			meetings.POST("/:id/attendees", meetingHandler.AddAttendee)
 			meetings.POST("/:id/respond", meetingHandler.RespondToMeeting)
 		}
+
+		// Analytics
+		api.GET("/analytics/dashboard", analyticsHandler.GetDashboardAnalytics)
 	}
 
 	// Start server

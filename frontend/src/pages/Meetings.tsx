@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
+import { usePermissions } from '../contexts/PermissionContext';
 import './Meetings.css';
 
 interface Attendee {
@@ -38,6 +39,7 @@ interface TeamMember {
 }
 
 const Meetings: React.FC = () => {
+    const { canEdit } = usePermissions();
     const [meetings, setMeetings] = useState<Meeting[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -56,6 +58,7 @@ const Meetings: React.FC = () => {
         recurring_pattern: '',
         attendee_ids: [] as number[]
     });
+    const [attendeeSearch, setAttendeeSearch] = useState('');
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -189,12 +192,14 @@ const Meetings: React.FC = () => {
                                 <option key={team.id} value={team.id}>{team.name}</option>
                             ))}
                         </select>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => setShowCreateModal(true)}
-                        >
-                            + New Meeting
-                        </button>
+                        {selectedTeam && canEdit(selectedTeam) && (
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => setShowCreateModal(true)}
+                            >
+                                + New Meeting
+                            </button>
+                        )}
                     </div>
                 </header>
 
@@ -324,29 +329,72 @@ const Meetings: React.FC = () => {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Attendees</label>
+                                    {/* Selected attendees as chips */}
+                                    {newMeeting.attendee_ids.length > 0 && (
+                                        <div className="selected-attendees">
+                                            {newMeeting.attendee_ids.map(id => {
+                                                const member = teamMembers.find(m => m.id === id);
+                                                return member ? (
+                                                    <span key={id} className="attendee-chip">
+                                                        {member.full_name}
+                                                        <button
+                                                            type="button"
+                                                            className="chip-remove"
+                                                            onClick={() => setNewMeeting({
+                                                                ...newMeeting,
+                                                                attendee_ids: newMeeting.attendee_ids.filter(aid => aid !== id)
+                                                            })}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    )}
+                                    {/* Search input */}
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="🔍 Search team members..."
+                                        value={attendeeSearch}
+                                        onChange={e => setAttendeeSearch(e.target.value)}
+                                    />
+                                    {/* Filtered member list */}
                                     <div className="attendee-checkboxes">
-                                        {teamMembers.map(member => (
-                                            <label key={member.id} className="checkbox-label">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={newMeeting.attendee_ids.includes(member.id)}
-                                                    onChange={e => {
-                                                        if (e.target.checked) {
+                                        {teamMembers
+                                            .filter(m =>
+                                                (m.full_name || '').toLowerCase().includes(attendeeSearch.toLowerCase()) &&
+                                                !newMeeting.attendee_ids.includes(m.id)
+                                            )
+                                            .slice(0, 5)
+                                            .map(member => (
+                                                <label key={member.id} className="checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={false}
+                                                        onChange={() => {
                                                             setNewMeeting({
                                                                 ...newMeeting,
                                                                 attendee_ids: [...newMeeting.attendee_ids, member.id]
                                                             });
-                                                        } else {
-                                                            setNewMeeting({
-                                                                ...newMeeting,
-                                                                attendee_ids: newMeeting.attendee_ids.filter(id => id !== member.id)
-                                                            });
-                                                        }
-                                                    }}
-                                                />
-                                                {member.full_name}
-                                            </label>
-                                        ))}
+                                                            setAttendeeSearch('');
+                                                        }}
+                                                    />
+                                                    {member.full_name}
+                                                </label>
+                                            ))}
+                                        {teamMembers.filter(m =>
+                                            (m.full_name || '').toLowerCase().includes(attendeeSearch.toLowerCase()) &&
+                                            !newMeeting.attendee_ids.includes(m.id)
+                                        ).length > 5 && (
+                                                <span className="more-hint">
+                                                    +{teamMembers.filter(m =>
+                                                        (m.full_name || '').toLowerCase().includes(attendeeSearch.toLowerCase()) &&
+                                                        !newMeeting.attendee_ids.includes(m.id)
+                                                    ).length - 5} more, type to search...
+                                                </span>
+                                            )}
                                     </div>
                                 </div>
                                 <div className="form-group">
@@ -382,77 +430,79 @@ const Meetings: React.FC = () => {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </div >
                 )}
 
                 {/* Meeting Detail Modal */}
-                {selectedMeeting && (
-                    <div className="modal-overlay" onClick={() => setSelectedMeeting(null)}>
-                        <div className="modal" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h2>{selectedMeeting.title}</h2>
-                                <button className="btn-close" onClick={() => setSelectedMeeting(null)}>✕</button>
-                            </div>
-
-                            <div className="meeting-details">
-                                <div className="detail-row">
-                                    <span className="detail-label">📅 Date</span>
-                                    <span>{formatDate(selectedMeeting.meeting_date)}</span>
+                {
+                    selectedMeeting && (
+                        <div className="modal-overlay" onClick={() => setSelectedMeeting(null)}>
+                            <div className="modal" onClick={e => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h2>{selectedMeeting.title}</h2>
+                                    <button className="btn-close" onClick={() => setSelectedMeeting(null)}>✕</button>
                                 </div>
-                                <div className="detail-row">
-                                    <span className="detail-label">🕐 Time</span>
-                                    <span>{formatTime(selectedMeeting.start_time)} - {formatTime(selectedMeeting.end_time)}</span>
-                                </div>
-                                {selectedMeeting.location && (
-                                    <div className="detail-row">
-                                        <span className="detail-label">📍 Location</span>
-                                        <span>{selectedMeeting.location}</span>
-                                    </div>
-                                )}
-                                {selectedMeeting.description && (
-                                    <div className="detail-row description">
-                                        <span className="detail-label">📝 Description</span>
-                                        <p>{selectedMeeting.description}</p>
-                                    </div>
-                                )}
-                                {selectedMeeting.creator && (
-                                    <div className="detail-row">
-                                        <span className="detail-label">👤 Organizer</span>
-                                        <span>{selectedMeeting.creator.full_name}</span>
-                                    </div>
-                                )}
 
-                                {selectedMeeting.attendees && selectedMeeting.attendees.length > 0 && (
-                                    <div className="attendees-section">
-                                        <h4>👥 Attendees ({selectedMeeting.attendees.length})</h4>
-                                        <div className="attendees-list">
-                                            {selectedMeeting.attendees.map(att => (
-                                                <div key={att.id} className="attendee-item">
-                                                    <span>{att.user?.full_name}</span>
-                                                    <span className={`badge ${getStatusBadge(att.status)}`}>
-                                                        {att.status}
-                                                    </span>
-                                                </div>
-                                            ))}
+                                <div className="meeting-details">
+                                    <div className="detail-row">
+                                        <span className="detail-label">📅 Date</span>
+                                        <span>{formatDate(selectedMeeting.meeting_date)}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                        <span className="detail-label">🕐 Time</span>
+                                        <span>{formatTime(selectedMeeting.start_time)} - {formatTime(selectedMeeting.end_time)}</span>
+                                    </div>
+                                    {selectedMeeting.location && (
+                                        <div className="detail-row">
+                                            <span className="detail-label">📍 Location</span>
+                                            <span>{selectedMeeting.location}</span>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                    {selectedMeeting.description && (
+                                        <div className="detail-row description">
+                                            <span className="detail-label">📝 Description</span>
+                                            <p>{selectedMeeting.description}</p>
+                                        </div>
+                                    )}
+                                    {selectedMeeting.creator && (
+                                        <div className="detail-row">
+                                            <span className="detail-label">👤 Organizer</span>
+                                            <span>{selectedMeeting.creator.full_name}</span>
+                                        </div>
+                                    )}
 
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={() => handleDeleteMeeting(selectedMeeting.id)}
-                                >
-                                    Delete Meeting
-                                </button>
+                                    {selectedMeeting.attendees && selectedMeeting.attendees.length > 0 && (
+                                        <div className="attendees-section">
+                                            <h4>👥 Attendees ({selectedMeeting.attendees.length})</h4>
+                                            <div className="attendees-list">
+                                                {selectedMeeting.attendees.map(att => (
+                                                    <div key={att.id} className="attendee-item">
+                                                        <span>{att.user?.full_name}</span>
+                                                        <span className={`badge ${getStatusBadge(att.status)}`}>
+                                                            {att.status}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button
+                                        type="button"
+                                        className="btn btn-danger"
+                                        onClick={() => handleDeleteMeeting(selectedMeeting.id)}
+                                    >
+                                        Delete Meeting
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </main>
-        </div>
+                    )
+                }
+            </main >
+        </div >
     );
 };
 

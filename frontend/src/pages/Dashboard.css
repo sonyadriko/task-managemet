@@ -414,4 +414,342 @@
         flex-direction: column;
         gap: var(--spacing-lg);
     }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.analytics-card {
+    background: var(--gradient-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+}
+
+.analytics-card h3 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text-secondary);
+}
+
+.analytics-card.wide {
+    grid-column: span 3;
+}
+
+/* Completion Ring */
+.completion-ring {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+}
+
+.completion-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.completion-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.completion-text .percentage {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-success);
+    display: block;
+}
+
+.completion-text .label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+/* Status Bars */
+.status-bars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.status-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.status-bar-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.85rem;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-bar-label .count {
+    margin-left: auto;
+    font-weight: 600;
+}
+
+.status-bar-track {
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.status-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+/* Priority Chart */
+.priority-chart {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 150px;
+    gap: var(--spacing-md);
+}
+
+.priority-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+}
+
+.priority-bar {
+    width: 100%;
+    max-width: 50px;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: var(--spacing-sm);
+    transition: height var(--transition-normal);
+}
+
+.priority-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+.priority-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    margin-top: var(--spacing-sm);
+    color: var(--color-text-muted);
+}
+
+/* Activity Chart */
+.activity-chart {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 120px;
+    gap: var(--spacing-sm);
+}
+
+.activity-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+}
+
+.activity-bar {
+    width: 100%;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: var(--spacing-xs);
+    min-height: 4px;
+}
+
+.activity-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.activity-day {
+    font-size: 0.7rem;
+    margin-top: var(--spacing-xs);
+    color: var(--color-text-muted);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--spacing-xl);
+}
+
+/* Team Stats */
+.team-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.team-stat-card {
+    padding: var(--spacing-md);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.team-stat-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.team-stat-header h4 {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.team-stat-numbers {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.team-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.team-stat-item .number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.team-stat-item .label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* Warning stat card */
+.stat-card.warning {
+    border-color: var(--color-danger);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.stat-icon.red {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.no-data {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+/* Responsive Analytics */
+@media (max-width: 1200px) {
+    .analytics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .analytics-card.wide {
+        grid-column: span 2;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Roles Section */
+.roles-section {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.roles-section h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-md);
+}
+
+.roles-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.role-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.role-team {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.role-badge.manager {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-success);
+}
+
+.role-badge.assistant {
+    background: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+}
+
+.role-badge.member {
+    background: rgba(72, 119, 186, 0.2);
+    color: var(--color-primary);
+}
+
+.role-badge.stakeholder {
+    background: rgba(107, 114, 128, 0.2);
+    color: var(--color-text-muted);
 }

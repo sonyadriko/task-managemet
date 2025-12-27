@@ -3,6 +3,7 @@ import apiClient from '../api/client';
 import Sidebar from '../components/Sidebar';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
+import { usePermissions } from '../contexts/PermissionContext';
 import './Board.css';
 
 interface HoldReason {
@@ -64,6 +65,7 @@ interface Comment {
 }
 
 const Board: React.FC = () => {
+    const { canEdit, canDelete, isStakeholder } = usePermissions();
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
     const [statuses, setStatuses] = useState<Status[]>([]);
@@ -403,9 +405,14 @@ const Board: React.FC = () => {
                                 <option key={team.id} value={team.id}>{team.name}</option>
                             ))}
                         </select>
-                        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                            + New Task
-                        </button>
+                        {selectedTeam && canEdit(selectedTeam) && (
+                            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                                + New Task
+                            </button>
+                        )}
+                        {selectedTeam && isStakeholder(selectedTeam) && (
+                            <span className="role-badge stakeholder">👁️ View Only</span>
+                        )}
                     </div>
                 </header>
 
@@ -795,26 +802,32 @@ const Board: React.FC = () => {
                             </div>
 
                             <div className="modal-actions">
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() => handleDeleteIssue(selectedIssue.id)}
-                                >
-                                    🗑️ Delete
-                                </button>
-                                {selectedIssue.is_on_hold ? (
+                                {selectedTeam && canDelete(selectedTeam) && (
                                     <button
-                                        className="btn btn-success"
-                                        onClick={() => { handleResumeIssue(selectedIssue.id); setShowDetailModal(false); }}
+                                        className="btn btn-danger"
+                                        onClick={() => handleDeleteIssue(selectedIssue.id)}
                                     >
-                                        ▶️ Resume Task
+                                        🗑️ Delete
                                     </button>
-                                ) : (
-                                    <button
-                                        className="btn btn-warning"
-                                        onClick={() => { setShowDetailModal(false); openHoldModal(selectedIssue); }}
-                                    >
-                                        ⏸️ Put On Hold
-                                    </button>
+                                )}
+                                {selectedTeam && canEdit(selectedTeam) && (
+                                    <>
+                                        {selectedIssue.is_on_hold ? (
+                                            <button
+                                                className="btn btn-success"
+                                                onClick={() => { handleResumeIssue(selectedIssue.id); setShowDetailModal(false); }}
+                                            >
+                                                ▶️ Resume Task
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="btn btn-warning"
+                                                onClick={() => { setShowDetailModal(false); openHoldModal(selectedIssue); }}
+                                            >
+                                                ⏸️ Put On Hold
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                                 <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
                                     Close
