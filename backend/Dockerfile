@@ -1,34 +1,37 @@
+# ========================
 # Build stage
-FROM golang:1.21-alpine AS builder
+# ========================
+FROM golang:1.24-alpine AS builder
+
 
 WORKDIR /app
 
-# Install dependencies
-RUN apk add --no-cache gcc musl-dev
+# Dependency untuk go mod & build
+RUN apk add --no-cache git ca-certificates tzdata gcc musl-dev \
+    && update-ca-certificates
 
-# Copy go mod files
+# Copy go mod files dulu biar layer caching kepake
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Copy source
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Build binary (static, kecil, cocok buat alpine final image)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
+# ========================
 # Final stage
+# ========================
 FROM alpine:latest
 
 WORKDIR /app
 
-# Install ca-certificates for HTTPS
+# Runtime cert + timezone
 RUN apk --no-cache add ca-certificates tzdata
 
-# Copy binary from builder
 COPY --from=builder /app/main .
 
-# Expose port
 EXPOSE 8080
 
-# Run the application
 CMD ["./main"]
